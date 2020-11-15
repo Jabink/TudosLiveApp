@@ -245,16 +245,17 @@ const JoinRoom = ({ match }) => {
       </div>
 
       {/* //////////////////////////////////////////////////toolbar///////////////////////////////////////////////////////// */}
-      {haveRemoteStream ? (
+    
         <Box
           bgcolor="rgb(25 25 25)"
           color="white"
           display="flex"
           alignItems="center"
           justifyContent="space-between"
+          className="toolbar"
         >
           {/* ///////////  */}
-          <Box>
+          <div>
             <Checkbox
               checkedIcon={<BsFillMicFill color="white" size="32" />}
               icon={<FiMicOff color="white" size="32" />}
@@ -272,10 +273,11 @@ const JoinRoom = ({ match }) => {
               onChange={handleChange}
               inputProps={{ "aria-label": "primary checkbox" }}
             />
-          </Box>
+          </div>
 
           {/* /////////////////////////////////////////////*/}
-          <Box>
+          {haveRemoteStream.current ? 
+          <div>
             <IconButton
               onClick={askDoubt}
               aria-label="upload picture"
@@ -291,11 +293,11 @@ const JoinRoom = ({ match }) => {
               {" "}
               <BsChatDotsFill color="white" />
             </IconButton>
-          </Box>
+          </div>
+:""
+}
         </Box>
-      ) : (
-        ""
-      )}
+      
       {/* ///////toolbar end////// */}
 
       <Snackbar

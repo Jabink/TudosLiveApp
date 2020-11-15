@@ -76,6 +76,9 @@
   }
   .toolbar {
     width: auto;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
   }
   .toolbar div {
     display: flex;

@@ -67,7 +67,7 @@ export default function FacultyBottomToolbar({
       display="flex"
       zIndex="10"
       alignItems="center"
-      // justifyContent="space-between"
+      justifyContent="space-between"
     >
 
 

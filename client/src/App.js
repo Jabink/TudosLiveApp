@@ -2,10 +2,10 @@ import React from 'react';
 import './App.css';
 import {BrowserRouter,Switch,Route} from 'react-router-dom';
 
-//
-import HomePage from  './components/HomePage'
-import CreateRoom from  './components/CreateRoom'
-import JoinRoom from  './components/JoinRoom'
+
+import FaculityRoom from './components/FaculityRoom';
+import HomePage from './components/HomePage';
+import JoinRoom from './components/JoinRoom';
 
 function App() {
   return (
@@ -13,8 +13,8 @@ function App() {
     <BrowserRouter>
     <Switch>
       <Route path="/" exact component={HomePage}/>
-      <Route path="/room/:roomId"  component={CreateRoom}/>
-      <Route path="/join/:roomId" component={JoinRoom}/>
+      <Route path="/room/:roomId" exact component={FaculityRoom}/>
+      <Route path="/join/:roomId/:name" exact component={JoinRoom}/>
     </Switch>
     </BrowserRouter>
     </React.Fragment>

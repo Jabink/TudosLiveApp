@@ -1,32 +1,58 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import io from "socket.io-client";
 import { FiMicOff, FiVideoOff } from "react-icons/fi";
-import { BsFillMicFill, BsFillCameraVideoFill } from "react-icons/bs";
+import { FaHandPaper } from "react-icons/fa";
+import {
+  BsFillMicFill,
+  BsFillCameraVideoFill,
+  BsChatDotsFill,
+  BsFillReplyFill,
+} from "react-icons/bs";
 import Checkbox from "@material-ui/core/Checkbox";
 import "../css/JoinRoom.css";
-import CircularProgress from "@material-ui/core/CircularProgress";
+import { Box, Dialog, IconButton, Slide, Typography } from "@material-ui/core";
+import Snackbar from "@material-ui/core/Snackbar";
+import { MdClear } from "react-icons/md";
+import { v4 as uuid } from "uuid";
 
 const JoinRoom = ({ match }) => {
   const roomId = match.params.roomId;
+  const name = match.params.name;
 
+  const HOSTID = useRef(0);
   const localVideoRef = useRef();
   const remoteVideoRef = useRef();
-
-  const localStreamRef = useRef();
+  const localStreamRef = useRef(null);
   const socketRef = useRef();
   const peerRef = useRef();
+  const msg = useRef("Connecting...");
+  const snackbarTime = useRef(60000);
+  const snackbarPosition = useRef("bottom");
+  const unMuteAudioPermissionEnabled = useRef(false);
+  const chatMsgs = useRef([]);
+  const [reply, setreply] = useState("");
 
-  const [audio, setAudio] = React.useState(true);
+  const [audio, setAudio] = React.useState(false);
   const [video, setVideo] = React.useState(true);
+  const [openSnackBar, setOpenSnackBar] = React.useState(true);
+  const [openChat, setOpenChat] = React.useState(false);
   const [haveRemoteStream, setHaveRemoteStream] = React.useState(false);
+  const [chats, setchats] = useState([]);
 
+  const riseHandMsg = "Rise hand";
+  const askDoubtMsg = "Ask doubt now";
+  const normalTime = 1500;
+  const noAudioPermission = "Your audio is muted!";
 
   useEffect(() => {
     navigator.mediaDevices
-      .getUserMedia({ video: {
-        width:{max:640},
-        height:{max:480},
-      }, audio: true })
+      .getUserMedia({
+        video: {
+          width: { max: 640 },
+          height: { max: 480 },
+        },
+        audio: true,
+      })
       .then((stream) => {
         localVideoRef.current.srcObject = stream;
         localStreamRef.current = stream;
@@ -37,7 +63,6 @@ const JoinRoom = ({ match }) => {
       });
   }, []);
 
-
   /////////////////////////////////////////////////////////SOCKET SERVER LISTENERS AND SENDERS /////////////////////////////////////
   const socketConfig = () => {
     socketRef.current = io.connect("/");
@@ -45,10 +70,10 @@ const JoinRoom = ({ match }) => {
     socketRef.current.on("hostId", getOffer);
     socketRef.current.on("answer", handleReceiveAnswer);
     socketRef.current.on("no room", () => {
-      alert("No room exist");
+      setOpenSnackBar(false);
+      alert("No class going on.");
     });
-    socketRef.current.on("host left", () => setHaveRemoteStream(false) );
-
+    socketRef.current.on("host left", () => setHaveRemoteStream(false));
     socketRef.current.on("ice-candidate", (data) => {
       const candidate = new RTCIceCandidate(data.val);
       peerRef.current
@@ -60,9 +85,19 @@ const JoinRoom = ({ match }) => {
           console.log(`candidate error:${e}`);
         });
     });
+    socketRef.current.on("unMute", () => {
+      toggleSnackBar(askDoubtMsg, normalTime, true);
+      unMuteAudioPermissionEnabled.current = true;
+      toggleAudio(true);
+    });
+    socketRef.current.on("replyMsg", (data) =>
+      updateChat({id:data.id,isSend: false, message: data.msg })
+    );
   };
 
   function getOffer(hostID) {
+    setOpenSnackBar(false);
+    HOSTID.current = hostID;
     const configuration = {
       iceServers: [
         {
@@ -91,7 +126,6 @@ const JoinRoom = ({ match }) => {
     };
   }
 
-
   ////////////////////////////////////PEER CONNECTION CALLBACKS/////////////////////////////////////////////
   function handleIceCandidate(e, host) {
     if (e.candidate) {
@@ -103,6 +137,7 @@ const JoinRoom = ({ match }) => {
     }
   }
   function handleTrack(e) {
+    setOpenSnackBar(false);
     setHaveRemoteStream(true);
     remoteVideoRef.current.srcObject = e.streams[0];
   }
@@ -136,31 +171,69 @@ const JoinRoom = ({ match }) => {
   /////////////////////////////////////////////////// FUNCTIONS /////////////////////////////////////////////////////
 
   const handleChange = (event) => {
-    if (event.target.name === "audio") {
-      localStreamRef.current.getAudioTracks()[0].enabled = event.target.checked;
-      setAudio(event.target.checked);
-    } else {
-      localStreamRef.current.getVideoTracks()[0].enabled = event.target.checked;
-      setVideo(event.target.checked);
+    if (localStreamRef.current != null) {
+      if (event.target.name === "audio") toggleAudio(event.target.checked);
+      else toggleVideo(event.target.checked);
+    }
+  };
+  function toggleAudio(isEnabled) {
+    if (unMuteAudioPermissionEnabled.current) {
+      localStreamRef.current.getAudioTracks()[0].enabled = isEnabled;
+      setAudio(isEnabled);
+      return;
+    }
+    toggleSnackBar(noAudioPermission, normalTime, true);
+  }
+  function toggleVideo(isEnabled) {
+    localStreamRef.current.getVideoTracks()[0].enabled = isEnabled;
+    setVideo(isEnabled);
+  }
+
+  const toggleSnackBar = (msgToShow, time, isOpen) => {
+    msg.current = msgToShow;
+    snackbarTime.current = time;
+    setOpenSnackBar(isOpen);
+  };
+
+  const askDoubt = () => {
+    if (localStreamRef.current != null) {
+      sendNewDoubt(true);
+      toggleSnackBar(riseHandMsg, normalTime, true);
+    }
+  };
+  const sendMsg = () => {
+    if (reply !== "") {
+      sendNewDoubt(false);
+      setreply("");
     }
   };
 
-  /////////////////////////////////////////////////// WIDGETS /////////////////////////////////////////////////////
-  const Loading = () => {
-    return (
-      <div className="loader">
-        <CircularProgress />
-        <p>Connectng...</p>
-      </div>
-    );
+  const updateChat = (data) => {
+    chatMsgs.current.push(data);
+    setchats([...chats, data]);
   };
-
+  const closeChatPopup = (event, reason) => setOpenChat(false);
+  const handleReplyChange = (e) => setreply(e.target.value);
+  const openChatPopup = () => setOpenChat(true);
+  const closeSnackBar = (event, reason) => {
+    reason !== "clickaway" && setOpenSnackBar(false);
+  };
+  const sendNewDoubt = (isQnTypeAudio) => {
+    const uniqueID = uuid();
+    socketRef.current.emit("new-message", {
+      id: uniqueID,
+      name: name,
+      isQnTypeAudio: isQnTypeAudio,
+      qn: reply,
+      userID: "",
+      hostId: HOSTID.current,
+    });
+    !isQnTypeAudio && updateChat({id:uniqueID,isSend: true, message: reply });
+  };
   /////////////////////////////////////////////////// WIDGET /////////////////////////////////////////////////////
 
   return (
     <div className="main">
-      {haveRemoteStream || remoteVideoRef.current ? "" : <Loading />}
-
       <div className="video-container">
         <video
           muted
@@ -171,30 +244,122 @@ const JoinRoom = ({ match }) => {
         <video ref={remoteVideoRef} autoPlay hidden={!haveRemoteStream}></video>
       </div>
 
-      <div className="toolbar">
-        <div>
-          <Checkbox
-            checkedIcon={<BsFillMicFill color="white" size="32" />}
-            icon={<FiMicOff color="white" size="32" />}
-            checked={audio}
-            name="audio"
-            onChange={handleChange}
-            inputProps={{ "aria-label": "primary checkbox" }}
-          />
+      {/* //////////////////////////////////////////////////toolbar///////////////////////////////////////////////////////// */}
+      {haveRemoteStream ? (
+        <Box
+          bgcolor="rgb(25 25 25)"
+          color="white"
+          display="flex"
+          alignItems="center"
+          justifyContent="space-between"
+        >
+          {/* ///////////  */}
+          <Box>
+            <Checkbox
+              checkedIcon={<BsFillMicFill color="white" size="32" />}
+              icon={<FiMicOff color="white" size="32" />}
+              checked={audio}
+              name="audio"
+              onChange={handleChange}
+              inputProps={{ "aria-label": "primary checkbox" }}
+            />
 
-          <Checkbox
-            checkedIcon={<BsFillCameraVideoFill color="white" size="32" />}
-            icon={<FiVideoOff color="white" size="32" />}
-            checked={video}
-            name="video"
-            onChange={handleChange}
-            inputProps={{ "aria-label": "primary checkbox" }}
+            <Checkbox
+              checkedIcon={<BsFillCameraVideoFill color="white" size="32" />}
+              icon={<FiVideoOff color="white" size="32" />}
+              checked={video}
+              name="video"
+              onChange={handleChange}
+              inputProps={{ "aria-label": "primary checkbox" }}
+            />
+          </Box>
+
+          {/* /////////////////////////////////////////////*/}
+          <Box>
+            <IconButton
+              onClick={askDoubt}
+              aria-label="upload picture"
+              component="span"
+            >
+              <FaHandPaper color="white" />
+            </IconButton>
+            <IconButton
+              onClick={openChatPopup}
+              aria-label="upload picture"
+              component="span"
+            >
+              {" "}
+              <BsChatDotsFill color="white" />
+            </IconButton>
+          </Box>
+        </Box>
+      ) : (
+        ""
+      )}
+      {/* ///////toolbar end////// */}
+
+      <Snackbar
+        anchorOrigin={{
+          vertical: snackbarPosition.current,
+          horizontal: "center",
+        }}
+        open={openSnackBar}
+        autoHideDuration={snackbarTime.current}
+        message={msg.current}
+        TransitionComponent={Slide}
+        onClose={closeSnackBar}
+      />
+
+      <Dialog
+        fullScreen
+        open={openChat}
+        onClose={closeChatPopup}
+        TransitionComponent={Slide}
+      >
+        <Box
+          bgcolor="black"
+          display="flex"
+          justifyContent="space-between"
+          alignItems="center"
+          color="white"
+          paddingLeft="16px"
+        >
+          <Typography onClick={closeChatPopup}>
+            <b>Chat</b>
+          </Typography>
+          <IconButton onClick={closeChatPopup} aria-label="close">
+            <MdClear color="white" />
+          </IconButton>
+        </Box>
+
+        <Box height="100%" overflow="scroll">
+          {chatMsgs.current.map((msg) => {
+            return (
+              <Box key={msg.id} textAlign={msg.isSend ? "end" : "start"}>
+                <span  className="chatItem">{msg.message}</span>
+              </Box>
+            );
+          })}
+        </Box>
+
+        <Box bgcolor="black" display="flex">
+          <input
+            className="inputStyle"
+            type="text"
+            required
+            onChange={handleReplyChange}
+            value={reply}
           />
-        </div>
-        {/* <Button className="btn" variant="contained" color="secondary" >
-          LEAVE
-        </Button> */}
-      </div>
+          <IconButton
+            onClick={sendMsg}
+            color="primary"
+            aria-label="upload picture"
+            component="span"
+          >
+            <BsFillReplyFill color="white" />
+          </IconButton>
+        </Box>
+      </Dialog>
     </div>
   );
 };

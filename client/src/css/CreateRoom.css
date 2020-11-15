@@ -1,7 +1,5 @@
-.createRoom .MyVideo{
-    width: 320px;
-    height: 300px;
-    object-fit: cover;
+
+.facVideo{
     border:0.01em solid #eeeeee;
 }
 

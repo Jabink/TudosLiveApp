@@ -15,7 +15,7 @@ export default function WhiteBoard() {
     currY = 0,
     dot_flag = false;
 
-  var x = "black",y = 2;
+  var inkColor = "black",penWidth = 2;
 
   ////////////////////////////////////INITIAL FUNCTIONS////////////////////////////////////////////////////
   useEffect(() => {
@@ -38,7 +38,7 @@ export default function WhiteBoard() {
       dot_flag = true;
       if (dot_flag) {
         ctx.current.beginPath();
-        ctx.current.fillStyle = x;
+        ctx.current.fillStyle = inkColor;
         ctx.current.fillRect(currX, currY, 2, 2);
         ctx.current.closePath();
         dot_flag = false;
@@ -60,42 +60,41 @@ export default function WhiteBoard() {
     ctx.current.beginPath();
     ctx.current.moveTo(prevX, prevY);
     ctx.current.lineTo(currX, currY);
-    ctx.current.strokeStyle = x;
-    ctx.current.lineWidth = y;
+    ctx.current.strokeStyle = inkColor;
+    ctx.current.lineWidth = penWidth;
     ctx.current.stroke();
     ctx.current.closePath();
   }
 
   ////////////////////////////////////WIDGET FUNCTIONS/////////////////////////////////////////////////////
-  const erase=()=> {ctx.current.clearRect(0, 0, canvas.current.width, canvas.current.height) }
+  const erase=()=> {ctx.current.clearRect(0, 0, canvas.current.width, canvas.current.height)}
 
   const color=(color) =>{
     switch (color) {
         case "green":
-            x = "green";
+          inkColor = "green";
             break;
         case "blue":
-            x = "blue";
+          inkColor = "blue";
             break;
         case "red":
-            x = "red";
+          inkColor = "red";
             break;
         case "yellow":
-            x = "yellow";
+          inkColor = "yellow";
             break;
         case "orange":
-            x = "orange";
+          inkColor = "orange";
             break;
         case "black":
-            x = "black";
+          inkColor = "black";
             break;
         case "white":
-            x = "white";
+          inkColor = "white";
             break;
     }
-    if (x == "white") y = 14;
-    else y = 2;
-
+    if (inkColor == "white") penWidth = 14;
+    else penWidth = 2;
 }
 
   ///////////////////////////////////////////WIDGET///////////////////////////////////////////////
@@ -105,12 +104,12 @@ export default function WhiteBoard() {
       width="100%"
       height="100%"
       bgcolor="white"
-      color="black"
-    >
+      position="absolute">
 
-       <Box  position="absolute" right="0" margin="1em 1.5em">
-       {/* <Tooltip title="Pen"><IconButton color="primary" aria-label="upload picture" component="span"  onClick={()=>color("black")}><BiPen/></IconButton></Tooltip> */}
-       {/* <Tooltip title="Eraser"><IconButton color="primary" aria-label="upload picture" component="span"  onClick={()=>color("white")}><BiEraser/></IconButton></Tooltip> */}
+       <Box  position="absolute" right="0">
+       <input type="color"/>
+       <Tooltip title="Pen"><IconButton color="primary" aria-label="upload picture" component="span"  onClick={()=>color("black")}><BiPen/></IconButton></Tooltip>
+       <Tooltip title="Eraser"><IconButton color="primary" aria-label="upload picture" component="span"  onClick={()=>color("white")}><BiEraser/></IconButton></Tooltip>
        <Tooltip title="Clear"><IconButton color="primary" aria-label="upload picture" component="span"  onClick={erase}><MdClear/></IconButton></Tooltip>
       </Box>
 

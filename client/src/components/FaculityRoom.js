@@ -422,7 +422,7 @@ export default function FaculityRoom({ match }) {
       <Box
         hidden={image === null}
         bgcolor="#121212"
-        height="100%"
+        height="90vh"
         width={view === 3 ? "100%" : "80%"}
         position="absolute"
         zIndex="20"

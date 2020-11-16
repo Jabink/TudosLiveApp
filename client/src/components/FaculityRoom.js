@@ -412,6 +412,7 @@ export default function FaculityRoom({ match }) {
         zIndex="30"
         right="0"
         color="black"
+        height="90vh"
       >
         <IconButton onClick={closeImage} aria-label="close">
           <MdClear color="white" />
@@ -421,7 +422,7 @@ export default function FaculityRoom({ match }) {
       <Box
         hidden={image === null}
         bgcolor="#121212"
-        height="90vh"
+        height="100%"
         width={view === 3 ? "100%" : "80%"}
         position="absolute"
         zIndex="20"

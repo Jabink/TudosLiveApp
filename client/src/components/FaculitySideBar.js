@@ -1,5 +1,6 @@
-import { Box, IconButton, Tooltip } from "@material-ui/core";
+import { Box, IconButton, Tooltip, Typography } from "@material-ui/core";
 import React, { useState } from "react";
+import { FiVideoOff } from "react-icons/fi";
 import { MdFilterList } from "react-icons/md";
 import "../css/Faculity.css";
 import AudioDoubt from "./AudioDoubt";
@@ -10,7 +11,8 @@ export default function FaculitySideBar({
   qns,
   unMuteUser,
   replyMsg,
-  localVideoRef
+  localVideoRef,
+  video
 }) {
 
   const borderColor = "#3a3a3a";
@@ -35,7 +37,7 @@ export default function FaculitySideBar({
     transition: "all 0.5s",
     position: "absolute",
     zIndex: 4,
-    maxHeight: "90vh",
+    height:"90vh",
     width: "80%",
     objectFit: "cover",
   };
@@ -83,6 +85,10 @@ export default function FaculitySideBar({
   return (
     <Box>
       <video autoPlay muted ref={localVideoRef} style={getVideoStyle()}></video>
+      <Box hidden={video} bgcolor="rgb(25 25 25)" border="1px solid white" style={getVideoStyle()} color="white" textAlign="center">
+        <Typography variant="h6" style={{marginTop:"60px"}}>Your video is disabled</Typography>
+        <FiVideoOff color="white" size="42px"/>
+      </Box>
 
       <Box
         bgcolor="rgb(25 25 25)"

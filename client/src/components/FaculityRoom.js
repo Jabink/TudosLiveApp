@@ -27,7 +27,7 @@ export default function FaculityRoom({ match }) {
   const [image, setImage] = useState(null);
   const [doubts, setDoubts] = useState([]);
   const [open, setOpen] = useState(false);
-  const [view, setview] = useState(2); ///face camera,tools,whiteboard
+  const [view, setview] = useState(1); ///face camera,tools,whiteboard
   // vals
   const totalViews = 3;
   const hand = "hand";
@@ -173,7 +173,7 @@ export default function FaculityRoom({ match }) {
         localStreamRef.current = stream;
       })
       .catch((err) => {
-        alert(`Error:${err}`);
+        alert("Accessing camera is denied in your device")
       });
   }, []);
   const handleMediaChange = (event) => {
@@ -210,23 +210,24 @@ export default function FaculityRoom({ match }) {
   const contextRef = useRef(null);
   const colorPicker = useRef(null);
   const [isDrawing, setisDrawing] = useState(false);
-  const [value, setValue] = useState(2);
+  const [value, setValue] = useState(1);
   const inkColor = useRef("#111");
+  
   useEffect(() => {
     const canvas = canvasRef.current;
-    canvas.width = window.innerWidth * 2;
-    canvas.height = window.innerHeight * 2;
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
     canvas.style.width = `${window.innerWidth}px`;
     canvas.style.height = `${window.innerHeight}px`;
 
     const context = canvas.getContext("2d");
-    context.scale(2, 2);
     context.lineCap = "round";
     context.strokeStyle = inkColor.current;
     context.fillStyle = inkColor.current;
     context.lineWidth = 2;
     contextRef.current = context;
   }, []);
+
   const handleColorPick = (e) => {
     contextRef.current.strokeStyle = e.target.value;
     contextRef.current.fillStyle = e.target.value;
@@ -343,9 +344,9 @@ export default function FaculityRoom({ match }) {
           <Slider
             value={value}
             min={1}
-            max={10}
+            max={30}
             onChange={handleChange}
-            style={{ minWidth: "120px", margin: "0px 8px" }}
+            style={{ minWidth: "200px", margin: "0px 8px" }}
           />
 
           <IconButton color="primary" onClick={addSquare}>
@@ -354,9 +355,9 @@ export default function FaculityRoom({ match }) {
           <IconButton color="primary" onClick={addCircle}>
             <BsCircle />
           </IconButton>
-          <IconButton color="primary" onClick={addTriangle}>
+          {/* <IconButton color="primary" onClick={addTriangle}>
             <BsTriangle />
-          </IconButton>
+          </IconButton> */}
           <input
             ref={colorPicker}
             type="color"
@@ -388,6 +389,7 @@ export default function FaculityRoom({ match }) {
         viewType={view}
         unMuteUser={unMuteUser}
         replyMsg={replyMsg}
+        video={video}
       ></FaculitySideBar>
 
       <FacultyBottomToolbar
